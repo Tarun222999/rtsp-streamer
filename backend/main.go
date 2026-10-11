@@ -27,7 +27,10 @@ func main() {
 }
 
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := websocket.Accept(w, r, nil)
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		OriginPatterns: []string{"localhost:5173"},
+	})
+	
 	if err != nil {
 		log.Printf("Websocket connect failed: %v", err)
 		return
