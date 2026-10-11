@@ -28,7 +28,12 @@ func main() {
 
 }
 
-const demoCamera1 = "rtsp://127.0.0.1:8554/camera1"
+var allowedDemoStreams = map[string]struct{}{
+	"rtsp://127.0.0.1:8554/camera1": {},
+	"rtsp://127.0.0.1:8554/camera2": {},
+	"rtsp://127.0.0.1:8554/camera3": {},
+	"rtsp://127.0.0.1:8554/camera4": {},
+}
 
 func validateStreamURL(raw string) (string, error) {
 	if raw == "" {
@@ -44,7 +49,7 @@ func validateStreamURL(raw string) (string, error) {
 		return "", fmt.Errorf("stream URL must be a complete rtsp URL")
 	}
 
-	if raw != demoCamera1 {
+	if _, allowed := allowedDemoStreams[raw]; !allowed {
 		return "", fmt.Errorf("this stream is not allowed in the local demo")
 	}
 
