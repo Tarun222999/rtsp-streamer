@@ -186,8 +186,8 @@
 
 .stream-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
   padding: 24px;
 }
 
@@ -196,6 +196,50 @@
   border-radius: 12px;
   padding: 16px;
   background: var(--bg);
+}
+
+.stream-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto;
+  align-items: end;
+  gap: 8px 12px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 24px 8px;
+  text-align: left;
+}
+
+.stream-form__field {
+  display: grid;
+  gap: 4px;
+}
+
+.stream-form label {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.stream-form input,
+.stream-form select,
+.stream-form button {
+  min-height: 38px;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+.stream-form input,
+.stream-form select {
+  width: 100%;
+}
+
+.stream-form__help,
+.stream-form__error {
+  grid-column: 1 / -1;
+  font-size: 14px;
+}
+
+.stream-form__error {
+  color: #b42318;
 }
 
 .stream-grid canvas {
@@ -209,7 +253,23 @@
   margin-top: 12px;
 }
 
+@media (max-width: 1200px) {
+  .stream-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 720px) {
+  .stream-form {
+    grid-template-columns: 1fr;
+    padding: 0 16px 8px;
+  }
+
+  .stream-form__help,
+  .stream-form__error {
+    grid-column: auto;
+  }
+
   .stream-grid {
     grid-template-columns: 1fr;
     padding: 16px;
