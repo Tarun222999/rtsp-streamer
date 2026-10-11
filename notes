@@ -1,0 +1,9 @@
+1.mediamtx
+ffmpeg test library to generate random videos
+2.0 websocket package
+2.websocket conn upgrade with aceept
+3.rtsp H.264 video
+4.these videos are not supported in browser
+5.ffmeg can convert these videos into mpeg-1 which is supported by browser
+5.1 ffmpeg should convert the H.264 video into MPEG-1 
+6.client can use JSMpeg to decode mpeg-1 and draw them in canvas

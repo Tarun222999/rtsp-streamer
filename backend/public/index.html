@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stream prototype</title>
+</head>
+<body>
+  <h1>Camera 1</h1>
+  <canvas id="video"></canvas>
+  <button id="stop">Stop</button>
+
+  <script src="/jsmpeg.min.js"></script>
+  <script>
+    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+    const url = `${protocol}//${location.host}/ws`;
+
+    const player = new JSMpeg.Player(url, {
+      canvas: document.getElementById("video"),
+      audio: false,
+      reconnectInterval: 0
+    });
+
+    document.getElementById("stop").onclick = () => {
+      player.destroy();
+    };
+
+    window.addEventListener("pagehide", () => player.destroy());
+  </script>
+</body>
+</html>

@@ -1,1 +1,36 @@
-\
+# Frontend dependencies and build output
+node_modules/
+dist/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Go build output
+/backend/bin/
+/backend/main.exe
+/backend/backend.exe
+/backend/backend
+*.test
+*.test.exe
+
+# Temporary files and local caches
+tmp/
+backend/tmp/
+*.log
+
+# Local environment variables
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Temporary conversion test
+/prototype.ts
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+
+notes
