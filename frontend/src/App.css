@@ -182,3 +182,36 @@
     border-right-color: var(--border);
   }
 }
+
+
+.stream-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  padding: 24px;
+}
+
+.stream-grid article {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--bg);
+}
+
+.stream-grid canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #000;
+}
+
+.stream-grid button {
+  margin-top: 12px;
+}
+
+@media (max-width: 720px) {
+  .stream-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+}

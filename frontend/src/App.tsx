@@ -1,23 +1,45 @@
-import StreamPlayer from './components/StreamPlayer'
+
+import { useState } from 'react';
 import './App.css'
-import { useState } from 'react'
+import StreamCard from './components/StreamCard';
+
+
+
+const streamWebSocketUrl = new URL('/ws', import.meta.env.VITE_BACKEND_URL);
+streamWebSocketUrl.protocol = streamWebSocketUrl.protocol === 'https:' ? 'wss:' : 'ws:'
+
+const initialStreams  = [
+  { id: 'viewer-a', title: 'Camera 1 — Viewer A' },
+  { id: 'viewer-b', title: 'Camera 1 — Viewer B' },
+]
+
 
 function App() {
-  const [isPlaying, setIsPlaying] = useState(true)
+
+  const [streams,setStreams]=useState(initialStreams)
+
+  function removeStream(id: string) {
+    setStreams((currentStreams) =>
+      currentStreams.filter((stream) => stream.id !== id),
+    )
+  }
 
   return (
     <main>
-      <h1>Camera 1</h1>
-      <StreamPlayer
-        wsUrl="ws://localhost:8080/ws"
-        isPlaying={isPlaying}
-      />
-      {
-        <button type='button' onClick={()=>setIsPlaying((isPlaying) => !isPlaying)}>
-          {isPlaying ? 'Pause': 'Play'}
-        </button>
-      }
+      <h1>RTSP Stream Viewer</h1>
+
+      <section  className="stream-grid">
+        {streams.map((stream) => (
+          <StreamCard
+            key={stream.id}
+            title={stream.title}
+            wsUrl={streamWebSocketUrl.toString()}
+            onRemove={()=>removeStream(stream.id)}
+          />
+        ))}
+      </section>
     </main>
+
   )
 }
 
