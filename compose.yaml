@@ -1,7 +1,36 @@
 services:
   mediamtx:
     image: bluenviron/mediamtx:1.21.2
-    ports:
-      - "127.0.0.1:8554:8554"
     environment:
       MTX_RTSPTRANSPORTS: tcp
+    ports:
+      - "127.0.0.1:8554:8554"
+    restart: unless-stopped
+
+  publishers:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile.publishers
+    image: stream-viewer-publishers
+    environment:
+      RTSP_BASE_URL: rtsp://mediamtx:8554
+    depends_on:
+      - mediamtx
+    restart: unless-stopped
+    stop_grace_period: 15s
+
+  backend:
+    build:
+      context: ./backend
+    image: stream-viewer-backend
+    environment:
+      PORT: "8080"
+      FRONTEND_ORIGIN: localhost:5173
+      RTSP_BASE_URL: rtsp://mediamtx:8554
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - mediamtx
+      - publishers
+    restart: unless-stopped
+    stop_grace_period: 15s
