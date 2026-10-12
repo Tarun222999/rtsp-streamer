@@ -5,16 +5,38 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
+	"os/signal"
+	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/coder/websocket"
 )
 
+var streamSlots = make(chan struct{}, 4)
+
+var (
+	streamMu     sync.Mutex
+	streamWG     sync.WaitGroup
+	shuttingDown bool
+)
+
 func main() {
+	appCtx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
+	defer stop()
+
+	configureDemoStreams()
+
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
 	})
@@ -23,16 +45,76 @@ func main() {
 
 	http.HandleFunc("/ws", handleWebSocket)
 
-	log.Println("Server listening on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	port := envOrDefault("PORT", "8080")
 
+	server := &http.Server{
+		Addr:              ":" + port,
+		ReadHeaderTimeout: 5 * time.Second,
+		BaseContext: func(net.Listener) context.Context {
+			return appCtx
+		},
+	}
+
+	shutdownDone := make(chan struct{})
+
+	go func() {
+		defer close(shutdownDone)
+		<-appCtx.Done()
+
+		streamMu.Lock()
+		shuttingDown = true
+		streamMu.Unlock()
+
+		log.Println("Shutdown requested")
+
+		shutdownCtx, cancel := context.WithTimeout(
+			context.Background(),
+			10*time.Second,
+		)
+		defer cancel()
+
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			log.Printf("HTTP shutdown failed: %v", err)
+			server.Close()
+		}
+
+		streamsDone := make(chan struct{})
+		go func() {
+			streamWG.Wait()
+			close(streamsDone)
+		}()
+
+		select {
+		case <-streamsDone:
+			log.Println("Stream cleanup complete")
+		case <-shutdownCtx.Done():
+			log.Println("Shutdown deadline reached")
+		}
+	}()
+
+	log.Printf("Server listening on :%s", port)
+
+	if err := server.ListenAndServe(); err != nil &&
+		err != http.ErrServerClosed {
+		log.Printf("HTTP server failed: %v", err)
+	}
+
+	stop()
+	<-shutdownDone
 }
 
-var allowedDemoStreams = map[string]struct{}{
-	"rtsp://127.0.0.1:8554/camera1": {},
-	"rtsp://127.0.0.1:8554/camera2": {},
-	"rtsp://127.0.0.1:8554/camera3": {},
-	"rtsp://127.0.0.1:8554/camera4": {},
+var allowedDemoStreams = make(map[string]struct{})
+
+func configureDemoStreams() {
+	base := strings.TrimRight(
+		envOrDefault("RTSP_BASE_URL", "rtsp://127.0.0.1:8554"),
+		"/",
+	)
+
+	for camera := 1; camera <= 4; camera++ {
+		sourceURL := fmt.Sprintf("%s/camera%d", base, camera)
+		allowedDemoStreams[sourceURL] = struct{}{}
+	}
 }
 
 func validateStreamURL(raw string) (string, error) {
@@ -64,8 +146,34 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	streamMu.Lock()
+
+	if shuttingDown {
+		streamMu.Unlock()
+		http.Error(w, "Server is shutting down", http.StatusServiceUnavailable)
+		return
+	}
+
+	streamWG.Add(1)
+	streamMu.Unlock()
+	defer streamWG.Done()
+
+	select {
+	case streamSlots <- struct{}{}:
+		defer func() { <-streamSlots }()
+	default:
+		http.Error(
+			w,
+			"Stream capacity reached. Pause another player and retry.",
+			http.StatusServiceUnavailable,
+		)
+		return
+	}
+
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-		OriginPatterns: []string{"localhost:5173"},
+		OriginPatterns: []string{
+			envOrDefault("FRONTEND_ORIGIN", "localhost:5173"),
+		},
 	})
 
 	if err != nil {
@@ -74,8 +182,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.CloseNow()
 
-	//limit each prototype connection limit to one minute
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
 	//detex browser disconnects while we sending video
@@ -87,6 +194,8 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		"-loglevel", "error",
 		"-nostdin",
 		"-rtsp_transport", "tcp",
+		"-rtsp_transport", "tcp",
+		"-timeout", "10000000",
 		"-i", streamURL,
 		"-an",
 		"-c:v", "mpeg1video",
@@ -103,6 +212,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Cannot open FFmpeg output: %v", err)
+		return
 	}
 
 	if err := cmd.Start(); err != nil {
@@ -147,4 +257,11 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+}
+
+func envOrDefault(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
 }

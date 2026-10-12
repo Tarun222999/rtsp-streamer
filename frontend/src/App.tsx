@@ -11,27 +11,31 @@ function createStreamWebSocketUrl(sourceUrl: string) {
 
   return websocketUrl.toString()
 }
+const rtspBaseUrl = (
+  import.meta.env.VITE_RTSP_BASE_URL || 'rtsp://127.0.0.1:8554'
+).replace(/\/+$/, '')
+
 
 const demoStreams = [
   {
     id: 'camera-1',
     title: 'Camera 1',
-    sourceUrl: 'rtsp://127.0.0.1:8554/camera1',
+    sourceUrl: `${rtspBaseUrl}/camera1`,
   },
   {
     id: 'viewer-b',
     title: 'Camera 2',
-    sourceUrl: 'rtsp://127.0.0.1:8554/camera2',
+    sourceUrl: `${rtspBaseUrl}/camera2`,
   },
   {
     id: 'viewer-c',
     title: 'Camera 3',
-    sourceUrl: 'rtsp://127.0.0.1:8554/camera3',
+    sourceUrl: `${rtspBaseUrl}/camera3`,
   },
   {
     id: 'viewer-d',
     title: 'Camera 4',
-    sourceUrl: 'rtsp://127.0.0.1:8554/camera4',
+    sourceUrl: `${rtspBaseUrl}/camera4`,
   },
 ]
 
@@ -146,7 +150,7 @@ function App() {
             title={stream.title}
             wsUrl={createStreamWebSocketUrl(stream.sourceUrl)}
             onRemove={() => removeStream(stream.id)}
-          />
+            />
         ))}
       </section>
     </main>
