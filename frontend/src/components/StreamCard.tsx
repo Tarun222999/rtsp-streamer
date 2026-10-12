@@ -33,22 +33,24 @@ function StreamCard({ title, wsUrl, onRemove }: StreamCardProps) {
         key={retryAttempt}
       />
 
-      <button type="button" onClick={() => setIsPlaying(!isPlaying)}>
-        {isPlaying ? 'Pause' : 'Play'}
-      </button>
-
-      <button type="button" onClick={onRemove}>
-        Remove
-      </button>
-
-      {isPlaying && status === 'error' && (
-        <button
-          type="button"
-          onClick={() => setRetryAttempt((attempt) => attempt + 1)}
-        >
-          Retry
+      <div className="stream-actions">
+        <button type="button" onClick={() => setIsPlaying(!isPlaying)}>
+          {isPlaying ? 'Pause' : 'Play'}
         </button>
-      )}
+
+        <button className="button-danger" type="button" onClick={onRemove}>
+          Remove
+        </button>
+
+        {isPlaying && status === 'error' && (
+          <button
+            type="button"
+            onClick={() => setRetryAttempt((attempt) => attempt + 1)}
+          >
+            Retry
+          </button>
+        )}
+      </div>
     </article>
   )
 }

@@ -39,13 +39,14 @@ const demoStreams = [
   },
 ]
 
-const initialStreams = demoStreams.map(({ id, ...stream }) => ({
-  ...stream,
-  id: `viewer-${id}`,
-}))
+type Stream = {
+  id: string
+  title: string
+  sourceUrl: string
+}
 
 function App() {
-  const [streams, setStreams] = useState(initialStreams)
+  const [streams, setStreams] = useState<Stream[]>([])
   const [draftUrl, setDraftUrl] = useState('')
   const [selectedDemoUrl, setSelectedDemoUrl] = useState('')
   const [formError, setFormError] = useState<string | null>(null)

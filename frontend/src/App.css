@@ -249,8 +249,59 @@
   background: #000;
 }
 
-.stream-grid button {
+.stream-form button,
+.stream-actions button {
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--social-bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms, border-color 150ms;
+}
+
+.stream-form button {
+  background: #7130bb;
+  border-color: #7130bb;
+  color: #fff;
+}
+
+.stream-form button:hover {
+  background: #5d249e;
+  border-color: #5d249e;
+}
+
+.stream-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 12px;
+}
+
+.stream-actions button:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.stream-actions .button-danger {
+  color: #b42318;
+  background: #fff1f0;
+  border-color: #f4b4ae;
+}
+
+.stream-actions .button-danger:hover {
+  background: #ffe0dd;
+  border-color: #b42318;
+}
+
+.stream-form button:focus-visible,
+.stream-actions button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
 }
 
 @media (max-width: 1200px) {
